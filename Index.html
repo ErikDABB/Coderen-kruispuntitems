@@ -1,0 +1,1680 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voorrangsmatrix – invulformulier</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+  <style>
+    :root {
+      --border: #ddd;
+      --muted: #666;
+      --soft: #f6f6f6;
+      --soft2: #fafafa;
+      --na: #f2f2f2;
+      --disabled: #efefef;
+      --danger: #b00020;
+      --ok: #106b21;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #fff;
+      color: #111;
+    }
+
+    h1, h2, h3, h4, h5 { margin: 0 0 10px 0; }
+    hr { margin: 20px 0; border: 0; border-top: 1px solid var(--border); }
+    .title { margin-bottom: 16px; }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .col-4 { grid-column: span 4; }
+    .col-6 { grid-column: span 6; }
+    .col-12 { grid-column: span 12; }
+
+    @media (max-width: 1000px) {
+      .col-4, .col-6 { grid-column: span 12; }
+    }
+
+    .panel, .well {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      padding: 12px;
+    }
+
+    .well { background: var(--soft2); }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .toolbar-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .form-group { margin-bottom: 6px; }
+    .form-group label {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    input[type="text"], select, textarea, input[type="file"] {
+      width: 100%;
+      border: 1px solid #bbb;
+      border-radius: 4px;
+      padding: 3px 6px;
+      font-size: 12px;
+      min-height: 28px;
+      background: #fff;
+      font-family: inherit;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .checkbox-list label,
+    .inline-radio label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: 12px;
+      font-weight: normal;
+      font-size: 12px;
+    }
+
+    .checkbox-list.vertical label {
+      display: flex;
+      margin-bottom: 4px;
+    }
+
+    .matrix-wrap { overflow-x: auto; }
+    .matrix { table-layout: fixed; width: 100%; border-collapse: collapse; }
+    .matrix th, .matrix td,
+    .summary th, .summary td {
+      border: 1px solid var(--border);
+      padding: 6px;
+      vertical-align: top;
+      font-size: 12px;
+    }
+    .matrix th:first-child { width: 40px; }
+    .matrix th { font-size: 12px; }
+    .matrix .na { background: var(--na); color: #999; text-align: center; }
+    .matrix .disabled { background: var(--disabled); color: #888; text-align: center; }
+
+    .cellblock { max-width: 340px; }
+    .cellblock .form-group { margin-bottom: 4px; }
+
+    .previewBox { height: 140px; overflow: hidden; border: 1px solid var(--border); border-radius: 6px; background: #fff; }
+    .previewImg { width: 100%; height: 140px; object-fit: contain; display: block; }
+
+    .debugBox { font-size:12px; color:#444; background:var(--soft2); border:1px solid var(--border); padding:8px; border-radius:6px; }
+
+    .participants-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .participants-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .participants-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .participants-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .participants-grid.cols-5 { grid-template-columns: repeat(3, 1fr); }
+
+    @media (max-width: 1200px) {
+      .participants-grid,
+      .participants-grid.cols-2,
+      .participants-grid.cols-3,
+      .participants-grid.cols-4,
+      .participants-grid.cols-5 { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 700px) {
+      .participants-grid,
+      .participants-grid.cols-2,
+      .participants-grid.cols-3,
+      .participants-grid.cols-4,
+      .participants-grid.cols-5 { grid-template-columns: 1fr; }
+    }
+
+    .summary { width: 100%; border-collapse: collapse; }
+
+    .button-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    button, .button-link {
+      padding: 8px 12px;
+      border: 1px solid #bbb;
+      background: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      text-decoration: none;
+      color: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    button:hover, .button-link:hover { background: #f7f7f7; }
+    .danger-btn {
+      background: var(--danger);
+      color: #fff;
+      border-color: #8f0019;
+    }
+    .danger-btn:hover { background: #97001b; }
+
+    .status { margin-top: 10px; font-size: 13px; white-space: pre-wrap; }
+    .status.ok { color: var(--ok); }
+    .status.error { color: var(--danger); }
+    .status.muted { color: var(--muted); }
+
+    .small-note { font-size: 11px; color: var(--muted); }
+    .autosave-pill {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      background: var(--soft2);
+    }
+
+    .hint-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      margin-top: 6px;
+    }
+    .tooltip-icon {
+      width: 18px;
+      height: 18px;
+      border: 1px solid #aaa;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: #fff;
+      cursor: help;
+      color: #444;
+      user-select: none;
+    }
+    .tooltip-box {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: calc(100% + 6px);
+      min-width: 300px;
+      max-width: 420px;
+      background: #fff;
+      color: #333;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+      z-index: 20;
+      line-height: 1.45;
+      font-size: 12px;
+    }
+    .hint-wrap:hover .tooltip-box,
+    .tooltip-icon:focus + .tooltip-box {
+      display: block;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    .modal {
+      background: white;
+      border-radius: 10px;
+      width: min(520px, calc(100vw - 30px));
+      padding: 16px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    canvas#junctionCanvas {
+      width: 100%;
+      height: 140px;
+      display: block;
+      background: #fff;
+    }
+
+    .ts-wrapper.multi .ts-control > div {
+      font-size: 12px;
+    }
+
+    .ts-control, .ts-dropdown {
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="title">
+      <h2 id="page_title">Voorrangsmatrix – invulformulier</h2>
+    </div>
+    <div class="toolbar-right">
+      <span class="autosave-pill" id="autosave_status">Autosave: actief</span>
+      <span class="autosave-pill" id="item_count_pill">Items opgeslagen: 0</span>
+      <label for="lang_toggle" class="small-note" id="lang_label">Taal interface</label>
+      <select id="lang_toggle" style="width:auto; min-width:120px;">
+        <option value="nl" selected>Nederlands</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-4">
+      <div class="panel">
+        <div class="form-group">
+          <label id="label_opgavecode" for="opgavecode">Opgavecode</label>
+          <input type="text" id="opgavecode" placeholder="bijv. 0101001" />
+        </div>
+        <div class="form-group">
+          <label id="label_naam_codeur" for="naam_codeur">Naam codeur</label>
+          <input type="text" id="naam_codeur" placeholder="bijv. Erik R." />
+        </div>
+        <div class="form-group">
+          <label id="label_vraagstam" for="vraagstam">Stam van de vraag</label>
+          <textarea id="vraagstam" rows="6" placeholder="Plaats hier een inleiding + vraag (lange tekst toegestaan)."></textarea>
+        </div>
+        <div class="form-group">
+          <label id="label_opleiding_fase" for="opleiding_fase">Voorlopige inschatting fase rijopleiding</label>
+          <select id="opleiding_fase"></select>
+        </div>
+        <div class="form-group">
+          <label id="label_n_deelnemers" for="n_deelnemers">Aantal deelnemers</label>
+          <select id="n_deelnemers">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label id="label_kruispunt_type" for="kruispunt_type">Kruispunttype</label>
+          <select id="kruispunt_type"></select>
+        </div>
+        <div id="armen_ui"></div>
+      </div>
+    </div>
+
+    <div class="col-4">
+      <div class="panel">
+        <div style="padding-top:10px;">
+          <div class="form-group">
+            <label id="label_context">Context</label>
+            <div class="checkbox-list vertical" id="ctx_container"></div>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" id="debug_mode" /> <span id="label_debug_mode">Debug (toon top-suggesties)</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-4">
+      <div class="well">
+        <strong id="label_preview">Kruispunt preview</strong>
+        <div id="junction_preview" style="margin-top: 8px;"></div>
+        <hr />
+        <strong id="label_refimg">Referentie-afbeelding (upload)</strong>
+        <div class="form-group" style="margin-top:8px;">
+          <input type="file" id="ref_img" accept="image/png,image/jpeg" />
+        </div>
+        <img id="ref_img_view" class="previewImg" alt="Referentie-afbeelding" style="display:none; height:150px; border:1px solid var(--border); border-radius:6px;" />
+      </div>
+    </div>
+  </div>
+
+  <hr />
+  <h4 id="section_deelnemers">Deelnemers</h4>
+  <div id="deelnemers_ui"></div>
+
+  <hr />
+  <h4 id="section_interacties">Interacties (matrix past zich aan)</h4>
+  <div class="matrix-wrap" id="matrix_ui"></div>
+
+  <hr />
+  <div id="debug_ui"></div>
+
+  <hr />
+  <h4 id="section_summary">Automatische samenvatting</h4>
+  <div id="summary_table"></div>
+
+  <hr />
+  <div class="button-row">
+    <button id="save_btn">Opslaan naar Excel</button>
+    <button id="save_next_btn">Opslaan &amp; volgend item</button>
+    <button id="new_item_btn">Nieuw item</button>
+    <button id="download_btn">Download Excel</button>
+    <label class="button-link" for="import_xlsx" id="import_btn_label">Importeer Excel</label>
+    <input type="file" id="import_xlsx" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none;" />
+    <button id="reset_dataset_btn" class="danger-btn">Start nieuwe dataset</button>
+  </div>
+  <div class="small-note hint-wrap">
+    <span id="workflow_hint">Doorgaan met vorige werk? → Importeer Excel · Nieuwe opdracht starten? → Start nieuwe dataset</span>
+    <span class="tooltip-icon" tabindex="0">i</span>
+    <div class="tooltip-box" id="workflow_tooltip">Importeer een eerder Excelbestand als je wilt doorgaan met bestaande coderingen. Kies 'Start nieuwe dataset' als je alle opgeslagen items wilt wissen en helemaal opnieuw wilt beginnen.</div>
+  </div>
+  <div id="save_status" class="status"></div>
+
+  <div class="modal-backdrop" id="new_modal_backdrop">
+    <div class="modal">
+      <h3 id="modal_title">Nieuw item starten</h3>
+      <p id="modal_text">Let op: als je nog niet hebt opgeslagen, gaan je invoergegevens verloren.</p>
+      <div class="modal-footer">
+        <button id="modal_cancel">Annuleer</button>
+        <button id="modal_no_save">Ga door zonder opslaan</button>
+        <button id="modal_save_then">Opslaan &amp; nieuw item</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const roltypen = [
+      "Voetganger; Normaal","Fietser(s)","Fatbike(s)","Brom/snorfietser(s)","Auto","Autobusje",
+      "Motorrijder","Bus","Vrachtauto","Tractor","Tram","Politieauto met signalen","Politieauto zonder signalen",
+      "Ambulance met signalen","Ambulance zonder signalen","Brandweerauto met signalen","Brandweerauto zonder signalen",
+      "Militaire kolonne met verlichting","Militaire voertuig geen kolonne","Voetganger; Blind met stok",
+      "Voetganger; Moeilijk bewegend","Invalidevoertuig","Rouwstoet","Skater","Ruiter",
+      "Bromkar 3w met laadbak","Segway"
+    ];
+
+    const intenties = ["Rechtdoor - oversteken","Linksaf","Rechtsaf","Afbuigend links","Afbuigend rechts"];
+
+    const faseChoices = [
+      { value: "Fase 2", label_nl: "Fase 2", label_en: "Phase 2" },
+      { value: "Fase 3", label_nl: "Fase 3", label_en: "Phase 3" },
+      { value: "Fase 4", label_nl: "Fase 4", label_en: "Phase 4" }
+    ];
+
+    const roltypen_en = {
+      "Voetganger; Normaal": "Pedestrian; normal",
+      "Fietser(s)": "Cyclist(s)",
+      "Fatbike(s)": "Fatbike(s)",
+      "Brom/snorfietser(s)": "Moped/light moped rider(s)",
+      "Auto": "Car",
+      "Autobusje": "Van",
+      "Motorrijder": "Motorcyclist",
+      "Bus": "Bus",
+      "Vrachtauto": "Truck",
+      "Tractor": "Tractor",
+      "Tram": "Tram",
+      "Politieauto met signalen": "Police car with siren",
+      "Politieauto zonder signalen": "Police car without siren",
+      "Ambulance met signalen": "Ambulance with siren",
+      "Ambulance zonder signalen": "Ambulance without siren",
+      "Brandweerauto met signalen": "Fire truck with siren",
+      "Brandweerauto zonder signalen": "Fire truck without siren",
+      "Militaire kolonne met verlichting": "Military convoy with lights",
+      "Militaire voertuig geen kolonne": "Military vehicle not in convoy",
+      "Voetganger; Blind met stok": "Pedestrian; blind with cane",
+      "Voetganger; Moeilijk bewegend": "Pedestrian; mobility impaired",
+      "Invalidevoertuig": "Mobility scooter/invalid carriage",
+      "Rouwstoet": "Funeral procession",
+      "Skater": "Skater",
+      "Ruiter": "Horse rider",
+      "Bromkar 3w met laadbak": "3-wheel cargo moped",
+      "Segway": "Segway"
+    };
+
+    const intenties_en = {
+      "Rechtdoor - oversteken": "Straight ahead - crossing",
+      "Linksaf": "Left turn",
+      "Rechtsaf": "Right turn",
+      "Afbuigend links": "Curving left",
+      "Afbuigend rechts": "Curving right"
+    };
+
+    const posities_en = {
+      "00_onbekend_nvt": "00. Unknown / n/a",
+      "01_rijstrook_rechts": "1. Lane 1 (right)",
+      "02_rijstrook_midden": "2. Lane 2 (middle)",
+      "03_rijstrook_links": "3. Lane 3 (left)",
+      "08_middenberm_opstelstrook": "8. Median waiting lane",
+      "10_sorteerstrook_links": "10. Sorting lane (left)",
+      "11_sorteerstrook_rechts": "11. Sorting lane (right)",
+      "12_opstelvak_verkeerslicht": "12. Traffic light waiting box",
+      "13_uitrijstrook_rechts": "13. Exit lane (right)",
+      "30_busstrook_busbaan": "30. Bus lane / busway",
+      "40_fietssuggestiestrook": "40. Advisory bike lane",
+      "41_fietsstrook": "41. Bike lane",
+      "42_fietspad_2_richtingen": "42. Two-way bike path",
+      "43_fietspad_1_richting": "43. One-way bike path",
+      "44_fietspad_kruisend_rotonde": "44. Bike path crossing roundabout",
+      "45_fietsstrook_op_rotonde": "45. Bike lane on roundabout",
+      "46_fietspad_naast_rotonde": "46. Bike path next to roundabout",
+      "47_fietsstraat": "47. Bicycle street",
+      "50_trottoir_rechts": "50. Sidewalk on right",
+      "51_trottoir_links": "51. Sidewalk on left",
+      "60_combi_voetpad_fietspad": "60. Combined footpath/bike path",
+      "80_trambaan": "80. Tram track",
+      "90_zebrapad": "90. Zebra crossing",
+      "110_uitrit_pand": "110. Building exit",
+      "111_uitrit_parkeerterrein": "111. Parking lot exit",
+      "112_uitrit_tankstation": "112. Gas station exit",
+      "113_uitrit_parkeerplaats": "113. Parking space exit",
+      "114_uitrit_erf": "114. Yard exit",
+      "120_onverharde_weg": "120. Unpaved road",
+      "130_woonerf_winkelerf": "130. Living/shopping yard"
+    };
+
+    const oorzaken_all = [
+      "RVV1: voetganger geen bestuurder",
+      "RVV 15.1: rechts voorrang",
+      "RVV 15.2A: onverharde weg",
+      "RVV 15.2B: trams voorrang",
+      "RVV 18.1: rechtd zelfde weg",
+      "RVV 18.2: korte vóór lange bocht",
+      "RVV 18.3: afslaande tram voorrang",
+      "RVV50: voorrangsvoertuig",
+      "RVV54: inenuitrit of erf mano",
+      "RVV80: haaientanden",
+      "RVV80: stopstreep",
+      "RVV62: tekens opvolgen",
+      "RVV16: colonnes/stoeten",
+      "RVV49.1: Overstek blinden/gehand",
+      "RVV49.2: VOP",
+      "RVV49.3: Kolonnes gaan voor",
+      "RVV49.4: VOP rood/glkn voetglicht",
+      "RVV74.2: Geel knip voetglicht",
+      "Bord B1: voorrangsweg",
+      "Bord B2: Einde voorrangsweg",
+      "Bord B3: Voorrangskruispunt",
+      "Bord B4: Voorrangskruispunt zijweg links",
+      "Bord B5: Voorrangskruispunt zijweg rechts",
+      "Bord B6: voorrang kruisende weg",
+      "Bord B7: stop-verleen kr weg voorrang",
+      "RVV68.1a; Rond - groen",
+      "RVV68.1b; Rond - geel",
+      "RVV68.1c; Rond - rood",
+      "RVV68.2; Pijl - groen",
+      "RVV68.2; Pijl - geel",
+      "RVV68.2; Pijl - rood",
+      "RVV68.3; Rood",
+      "RVV68.3; Geel",
+      "RVV68.3; Groen",
+      "RVV68.5; Rood en rechtsaf vrij",
+      "RVV 70.1, BT wit",
+      "RVV 70.1b, BT geel",
+      "RVV 70.1b, BT rood",
+      "RVV74.1;VT Groen",
+      "RVV74.2; VT Groen knipperend",
+      "RVV74.1; VT Rood",
+      "RVV74.2; Vt Geel knipperend"
+    ];
+
+    const richtingen4 = [
+      { label: "Noord", value: "N" },
+      { label: "Oost", value: "O" },
+      { label: "Zuid", value: "Z" },
+      { label: "West", value: "W" }
+    ];
+
+    const richtingen8 = [
+      { label: "Noord", value: "N" },
+      { label: "Noordoost", value: "NO" },
+      { label: "Oost", value: "O" },
+      { label: "Zuidoost", value: "ZO" },
+      { label: "Zuid", value: "Z" },
+      { label: "Zuidwest", value: "ZW" },
+      { label: "West", value: "W" },
+      { label: "Noordwest", value: "NW" }
+    ];
+
+    const posities = [
+      ["00. Onbekend / n.v.t.", "00_onbekend_nvt"],
+      ["1. Rijstrook 1 (Re)", "01_rijstrook_rechts"],
+      ["2. Rijstrook 2 (mi)", "02_rijstrook_midden"],
+      ["3. Rijstrook 3 (Li)", "03_rijstrook_links"],
+      ["8. Middenberm-opstelstrook", "08_middenberm_opstelstrook"],
+      ["10. Sorteerstrook (Li)", "10_sorteerstrook_links"],
+      ["11. Sorteerstrook (Re)", "11_sorteerstrook_rechts"],
+      ["12. Opstelvak verkeerslicht", "12_opstelvak_verkeerslicht"],
+      ["13. Uitrijstrook (Re)", "13_uitrijstrook_rechts"],
+      ["30. Busstrook/busbaan", "30_busstrook_busbaan"],
+      ["40. Fietssuggestiestrook", "40_fietssuggestiestrook"],
+      ["41. Fietsstrook", "41_fietsstrook"],
+      ["42. Fietspad 2 richtingen", "42_fietspad_2_richtingen"],
+      ["43. Fietspad 1 richting", "43_fietspad_1_richting"],
+      ["44. Fietspad kruisend rotonde", "44_fietspad_kruisend_rotonde"],
+      ["45. Fietsstrook op rotonde", "45_fietsstrook_op_rotonde"],
+      ["46. Fietspad naast rotonde", "46_fietspad_naast_rotonde"],
+      ["47. Fietsstraat", "47_fietsstraat"],
+      ["50. Trottoir rechtsgelegen", "50_trottoir_rechts"],
+      ["51. Trottoir linksgelegen", "51_trottoir_links"],
+      ["60. Combi voetpad-fietspad", "60_combi_voetpad_fietspad"],
+      ["80. Trambaan", "80_trambaan"],
+      ["90. Zebrapad", "90_zebrapad"],
+      ["110. Uitrit pand", "110_uitrit_pand"],
+      ["111. Uitrit parkeerterrein", "111_uitrit_parkeerterrein"],
+      ["112. Uitrit tankstation", "112_uitrit_tankstation"],
+      ["113. Uitrit parkeerplaats", "113_uitrit_parkeerplaats"],
+      ["114. Uitrit erf", "114_uitrit_erf"],
+      ["120. Onverharde weg", "120_onverharde_weg"],
+      ["130. Woonerf/winkelerf", "130_woonerf_winkelerf"]
+    ];
+
+    const kruispuntChoices = [
+      { value: "kruispunt_4arm", label_nl: "kruispunt_4arm", label_en: "4-arm intersection" },
+      { value: "t_splitsing", label_nl: "t_splitsing", label_en: "T-junction" },
+      { value: "rotonde", label_nl: "rotonde", label_en: "roundabout" }
+    ];
+
+    const ctxChoices = [
+      { value: "ctx_borden", label_nl: "borden", label_en: "signs" },
+      { value: "ctx_verkeerslichten", label_nl: "verkeerslichten", label_en: "traffic lights" },
+      { value: "ctx_haaientanden", label_nl: "haaientanden", label_en: "shark teeth" },
+      { value: "ctx_stopstreep", label_nl: "stopstreep", label_en: "stop line" },
+      { value: "ctx_uitrit_erf", label_nl: "uitrit/erf", label_en: "exit/yard" },
+      { value: "ctx_onverhard", label_nl: "onverhard", label_en: "unpaved road" },
+      { value: "ctx_vop", label_nl: "VOP (voetgangersoversteek)", label_en: "crosswalk" },
+      { value: "ctx_tekens", label_nl: "tekens opvolgen relevant", label_en: "traffic directions relevant" }
+    ];
+
+    const I18N = {
+      nl: {
+        page_title: "Voorrangsmatrix – invulformulier",
+        lang_label: "Taal interface",
+        label_opgavecode: "Opgavecode",
+        ph_opgavecode: "bijv. 0101001",
+        label_naam_codeur: "Naam codeur",
+        ph_naam_codeur: "bijv. Erik R.",
+        label_vraagstam: "Stam van de vraag",
+        ph_vraagstam: "Plaats hier een inleiding + vraag (lange tekst toegestaan).",
+        label_opleiding_fase: "Voorlopige inschatting fase rijopleiding",
+        label_n_deelnemers: "Aantal deelnemers",
+        label_kruispunt_type: "Kruispunttype",
+        label_context: "Context",
+        label_debug_mode: "Debug (toon top-suggesties)",
+        label_preview: "Kruispunt preview",
+        label_refimg: "Referentie-afbeelding (upload)",
+        section_deelnemers: "Deelnemers",
+        section_interacties: "Interacties (matrix past zich aan)",
+        section_summary: "Automatische samenvatting",
+        save_btn: "Opslaan naar Excel",
+        save_next_btn: "Opslaan & volgend item",
+        download_btn: "Download Excel",
+        new_item_btn: "Nieuw item",
+        import_btn_label: "Importeer Excel",
+        reset_dataset_btn: "Start nieuwe dataset",
+        workflow_hint: "Doorgaan met vorige werk? → Importeer Excel · Nieuwe opdracht starten? → Start nieuwe dataset",
+        workflow_tooltip: "Importeer een eerder Excelbestand als je wilt doorgaan met bestaande coderingen. Kies 'Start nieuwe dataset' als je alle opgeslagen items wilt wissen en helemaal opnieuw wilt beginnen.",
+        confirm_reset_dataset: "Weet je zeker dat je alle opgeslagen items wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
+        modal_title: "Nieuw item starten",
+        modal_text: "Let op: als je nog niet hebt opgeslagen, gaan je invoergegevens verloren.",
+        modal_cancel: "Annuleer",
+        modal_no_save: "Ga door zonder opslaan",
+        modal_save_then: "Opslaan & nieuw item",
+        import_ok: "✅ Excelbestand geïmporteerd. Nieuwe items worden hieraan toegevoegd.",
+        import_error: "❌ Importeren mislukt. Controleer of dit een geldig .xlsx-bestand is met de juiste tabbladen.",
+        import_sheet_missing: name => `❌ Tabblad ontbreekt in importbestand: ${name}.`,
+        autosave_active: "Autosave: actief",
+        autosave_saved: "Autosave: opgeslagen",
+        autosave_restored: "Autosave: hersteld",
+        item_count_label: n => `Items opgeslagen: ${n}`,
+        choose_primary: "— kies primair —",
+        choose_causes: "Kies oorzaak/oorzaken…",
+        winnaar_missing: (i,j) => `❌ Vul winnaar in voor paar ${i}–${j}.`,
+        causes_missing: (i,j) => `❌ Kies minstens 1 oorzaak voor paar ${i}–${j}.`,
+        primary_missing: (i,j) => `❌ Kies een geldige primair oorzaak voor paar ${i}–${j}.`,
+        vehicle_missing: k => `❌ Vul alle velden in bij voertuig ${k}.`,
+        rotonde_missing: k => `❌ Vul rotondevelden in bij voertuig ${k}.`,
+        opgave_missing: "❌ Vul een opgavecode in.",
+        saved_ok: now => `✅ Opgeslagen in browsergeheugen (${now}). Gebruik 'Download Excel' om het bestand te halen.`,
+        downloaded_ok: "✅ Excelbestand gedownload.",
+        empty_download: "Nog geen data opgeslagen. Klik eerst 'Opslaan naar Excel'.",
+        restored_notice: "Eerdere invoer is automatisch hersteld uit de browser.",
+        summary_headers: ["veh_id","wins","rank"],
+        participant: k => `Deelnemer ${k}`,
+        role: "Roltype",
+        intent: "Intentie",
+        approach: "Nader-richting",
+        position: "Positie",
+        roundabout_status: "Rotonde status",
+        roundabout_exit: "Uitrit (indien afrijdend)",
+        roundabout_arms: "Rotonde: aantal takken",
+        t_missing: "T-splitsing: ontbrekende arm",
+        pair_na: "n.v.t."
+      },
+      en: {
+        page_title: "Priority matrix – entry form",
+        lang_label: "Interface language",
+        label_opgavecode: "Item code",
+        ph_opgavecode: "e.g. 0101001",
+        label_naam_codeur: "Coder name",
+        ph_naam_codeur: "e.g. Erik R.",
+        label_vraagstam: "Question stem",
+        ph_vraagstam: "Place an introduction + question here (long text allowed).",
+        label_opleiding_fase: "Estimated driver training phase",
+        label_n_deelnemers: "Number of participants",
+        label_kruispunt_type: "Intersection type",
+        label_context: "Context",
+        label_debug_mode: "Debug (show top suggestions)",
+        label_preview: "Intersection preview",
+        label_refimg: "Reference image (upload)",
+        section_deelnemers: "Participants",
+        section_interacties: "Interactions (matrix updates automatically)",
+        section_summary: "Automatic summary",
+        save_btn: "Save to Excel",
+        save_next_btn: "Save & next item",
+        download_btn: "Download Excel",
+        new_item_btn: "New item",
+        import_btn_label: "Import Excel",
+        reset_dataset_btn: "Start new dataset",
+        workflow_hint: "Continue previous work? → Import Excel · Start new assignment? → Start new dataset",
+        workflow_tooltip: "Import an earlier Excel file if you want to continue working with existing codings. Choose 'Start new dataset' if you want to delete all saved items and begin from scratch.",
+        confirm_reset_dataset: "Are you sure you want to delete all saved items? This cannot be undone.",
+        modal_title: "Start new item",
+        modal_text: "Warning: unsaved input will be lost.",
+        modal_cancel: "Cancel",
+        modal_no_save: "Continue without saving",
+        modal_save_then: "Save & new item",
+        import_ok: "✅ Excel file imported. New items will be added to it.",
+        import_error: "❌ Import failed. Check whether this is a valid .xlsx file with the expected sheets.",
+        import_sheet_missing: name => `❌ Missing sheet in imported file: ${name}.`,
+        autosave_active: "Autosave: active",
+        autosave_saved: "Autosave: saved",
+        autosave_restored: "Autosave: restored",
+        item_count_label: n => `Saved items: ${n}`,
+        choose_primary: "— choose primary —",
+        choose_causes: "Choose cause(s)…",
+        winnaar_missing: (i,j) => `❌ Fill in a winner for pair ${i}–${j}.`,
+        causes_missing: (i,j) => `❌ Choose at least 1 cause for pair ${i}–${j}.`,
+        primary_missing: (i,j) => `❌ Choose a valid primary cause for pair ${i}–${j}.`,
+        vehicle_missing: k => `❌ Fill in all fields for vehicle ${k}.`,
+        rotonde_missing: k => `❌ Fill in roundabout fields for vehicle ${k}.`,
+        opgave_missing: "❌ Fill in an item code.",
+        saved_ok: now => `✅ Saved in browser memory (${now}). Use 'Download Excel' to retrieve the file.`,
+        downloaded_ok: "✅ Excel file downloaded.",
+        empty_download: "No data saved yet. Click 'Save to Excel' first.",
+        restored_notice: "Previous input was automatically restored from the browser.",
+        summary_headers: ["veh_id","wins","rank"],
+        participant: k => `Participant ${k}`,
+        role: "Role type",
+        intent: "Intention",
+        approach: "Approach direction",
+        position: "Position",
+        roundabout_status: "Roundabout status",
+        roundabout_exit: "Exit (if leaving roundabout)",
+        roundabout_arms: "Roundabout: number of arms",
+        t_missing: "T-junction: missing arm",
+        pair_na: "n/a"
+      }
+    };
+
+    const state = {
+      uploadedRefName: "",
+      uploadedRefDataUrl: "",
+      workbookData: {
+        Scenarios: [],
+        Deelnemers: [],
+        Interacties: [],
+        InteractieOorzaken: [],
+        Samenvatting: []
+      },
+      tomSelects: {},
+      autosaveKey: "voorrangsmatrix_autosave_v2",
+      workbookKey: "voorrangsmatrix_workbook_v2"
+    };
+
+    const $ = id => document.getElementById(id);
+    const t = key => I18N[$("lang_toggle").value][key];
+
+    function tl(labelNl, mapEn = {}) {
+      return $("lang_toggle").value === 'en' ? (mapEn[labelNl] || labelNl) : labelNl;
+    }
+
+    function positionLabel(labelNl, code) {
+      return $("lang_toggle").value === 'en' ? (posities_en[code] || labelNl) : labelNl;
+    }
+
+    function directionLabel(labelNl) {
+      const en = { "Noord": "North", "Noordoost": "Northeast", "Oost": "East", "Zuidoost": "Southeast", "Zuid": "South", "Zuidwest": "Southwest", "West": "West", "Noordwest": "Northwest" };
+      return $("lang_toggle").value === 'en' ? (en[labelNl] || labelNl) : labelNl;
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function optionHtml(value, label, selected = false) {
+      return `<option value="${escapeHtml(value)}" ${selected ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+    }
+
+    function pairId(i, j) { return `${i}_${j}`; }
+
+    function pairsUpTo(n) {
+      const out = [];
+      for (let i = 1; i <= n; i++) {
+        for (let j = i + 1; j <= n; j++) out.push({ i, j });
+      }
+      return out;
+    }
+
+    function nActive() {
+      const n = parseInt($("n_deelnemers").value || "4", 10);
+      return $("kruispunt_type").value === "t_splitsing" ? Math.min(n, 3) : n;
+    }
+
+    function allowedPairs() {
+      return pairsUpTo(nActive());
+    }
+
+    function ctxList() {
+      const checked = Array.from(document.querySelectorAll('#ctx_container input[type="checkbox"]:checked')).map(el => el.value);
+      return {
+        borden: checked.includes("ctx_borden"),
+        verkeerslichten: checked.includes("ctx_verkeerslichten"),
+        haaientanden: checked.includes("ctx_haaientanden"),
+        stopstreep: checked.includes("ctx_stopstreep"),
+        uitrit_erf: checked.includes("ctx_uitrit_erf"),
+        onverhard: checked.includes("ctx_onverhard"),
+        vop: checked.includes("ctx_vop"),
+        tekens: checked.includes("ctx_tekens")
+      };
+    }
+
+    function isPriorityVehicle(rol) { return /met signalen/i.test(rol); }
+    function isTram(rol) { return /^Tram$/.test(rol); }
+    function isPedestrian(rol) { return /^Voetganger/.test(rol); }
+    function isDisabledPed(rol) { return /Blind|Moeilijk bewegend|Invalide/i.test(rol); }
+    function isColonneOrStoet(rol) { return /kolonne|Rouwstoet/i.test(rol); }
+
+    function suggestOorzaken(ctx, rolI, rolJ) {
+      const score = new Array(oorzaken_all.length).fill(0);
+      const bump = (regex, w) => {
+        oorzaken_all.forEach((item, idx) => { if (regex.test(item)) score[idx] += w; });
+      };
+
+      if (ctx.haaientanden) bump(/^RVV80: haaientanden/, 50);
+      if (ctx.stopstreep) bump(/^RVV80: stopstreep/, 50);
+      if (ctx.uitrit_erf) bump(/^RVV54:/, 45);
+      if (ctx.onverhard) bump(/^RVV 15\.2A:/, 35);
+      if (ctx.vop) bump(/^RVV49\.2:/, 45);
+      if (ctx.tekens) bump(/^RVV62:/, 25);
+      if (ctx.verkeerslichten) bump(/^RVV68\.|^RVV74\.|^RVV 70\./, 25);
+
+      if (isTram(rolI) || isTram(rolJ)) {
+        bump(/^RVV 15\.2B:/, 60);
+        bump(/^RVV 18\.3:/, 60);
+      }
+      if (isPriorityVehicle(rolI) || isPriorityVehicle(rolJ)) bump(/^RVV50:/, 70);
+      if (isPedestrian(rolI) || isPedestrian(rolJ)) bump(/^RVV1:/, 30);
+      if (isDisabledPed(rolI) || isDisabledPed(rolJ)) bump(/^RVV49\.1:/, 50);
+      if (isColonneOrStoet(rolI) || isColonneOrStoet(rolJ)) {
+        bump(/^RVV16:/, 40);
+        bump(/^RVV49\.3:/, 40);
+      }
+
+      bump(/^RVV 15\.1:/, 10);
+      bump(/^RVV 18\.1:/, 10);
+      bump(/^RVV 18\.2:/, 10);
+
+      return oorzaken_all
+        .map((value, idx) => ({ value, score: score[idx] }))
+        .sort((a, b) => b.score - a.score || a.value.localeCompare(b.value, 'nl'))
+        .map(x => x.value);
+    }
+
+    const codes8 = richtingen8.map(x => x.value);
+    const angles8 = [90,45,0,315,270,225,180,135];
+
+    function nearestCompassCode(angleDeg) {
+      const a = ((angleDeg % 360) + 360) % 360;
+      const diffs = angles8.map(x => Math.abs((((x - a) + 180) % 360) - 180));
+      return codes8[diffs.indexOf(Math.min(...diffs))];
+    }
+
+    function rotondeArmCodes(k) {
+      const angs = Array.from({ length: k }, (_, idx) => 90 - idx * (360 / k));
+      let mapped = angs.map(nearestCompassCode);
+      if (new Set(mapped).size < k) {
+        const used = [];
+        mapped = angs.map(a => {
+          const ordered = angles8
+            .map((x, idx) => ({ d: Math.abs((((x - a) + 180) % 360) - 180), code: codes8[idx] }))
+            .sort((m, n) => m.d - n.d);
+          const pick = ordered.find(x => !used.includes(x.code)).code;
+          used.push(pick);
+          return pick;
+        });
+      }
+      return mapped;
+    }
+
+    function subsetDirChoices(codesSubset) {
+      return codesSubset.map(code => richtingen8.find(x => x.value === code));
+    }
+
+    function rotondeDirs() {
+      const k = parseInt(document.querySelector('#rotonde_takken')?.value || '4', 10);
+      return subsetDirChoices(rotondeArmCodes(k));
+    }
+
+    function setStatus(msg, type = "") {
+      const box = $("save_status");
+      box.className = `status ${type}`.trim();
+      box.textContent = msg;
+    }
+
+    function setAutosaveLabel(kind = "active") {
+      const el = $("autosave_status");
+      if (kind === "saved") el.textContent = t("autosave_saved");
+      else if (kind === "restored") el.textContent = t("autosave_restored");
+      else el.textContent = t("autosave_active");
+    }
+
+    function updateItemCountPill() {
+      const n = Array.isArray(state.workbookData?.Scenarios) ? state.workbookData.Scenarios.length : 0;
+      const el = $("item_count_pill");
+      if (el) el.textContent = t('item_count_label')(n);
+    }
+
+    function populateStaticControls() {
+      const currentType = $("kruispunt_type").value || "kruispunt_4arm";
+      const currentCtx = Array.from(document.querySelectorAll('#ctx_container input[type="checkbox"]:checked')).map(el => el.value);
+      const currentFase = $("opleiding_fase").value || "Fase 3";
+      const isEn = $("lang_toggle").value === 'en';
+
+      $("opleiding_fase").innerHTML = faseChoices
+        .map(x => optionHtml(x.value, isEn ? x.label_en : x.label_nl, x.value === currentFase))
+        .join('');
+
+      $("kruispunt_type").innerHTML = kruispuntChoices
+        .map(x => optionHtml(x.value, isEn ? x.label_en : x.label_nl, x.value === currentType))
+        .join('');
+
+      $("ctx_container").innerHTML = ctxChoices.map(x => {
+        const checked = currentCtx.includes(x.value) ? 'checked' : '';
+        const label = isEn ? x.label_en : x.label_nl;
+        return `<label><input type="checkbox" value="${escapeHtml(x.value)}" ${checked}> <span>${escapeHtml(label)}</span></label>`;
+      }).join('');
+    }
+
+    function applyLanguage() {
+      const L = I18N[$("lang_toggle").value];
+      [
+        "page_title","lang_label","label_opgavecode","label_naam_codeur","label_vraagstam","label_opleiding_fase",
+        "label_n_deelnemers","label_kruispunt_type","label_context","label_debug_mode","label_preview",
+        "label_refimg","section_deelnemers","section_interacties","section_summary","save_btn",
+        "save_next_btn","download_btn","new_item_btn","import_btn_label","reset_dataset_btn","workflow_hint",
+        "modal_title","modal_text","modal_cancel","modal_no_save","modal_save_then"
+      ].forEach(id => {
+        const el = $(id);
+        if (el) el.textContent = L[id];
+      });
+      $("workflow_tooltip").textContent = L.workflow_tooltip;
+      $("opgavecode").placeholder = L.ph_opgavecode;
+      $("naam_codeur").placeholder = L.ph_naam_codeur;
+      $("vraagstam").placeholder = L.ph_vraagstam;
+      setAutosaveLabel("active");
+      updateItemCountPill();
+      populateStaticControls();
+      rerenderAll();
+    }
+
+    function renderArmenUI() {
+      const type = $("kruispunt_type").value;
+      let html = "";
+      if (type === "rotonde") {
+        html = `
+          <div class="form-group">
+            <label for="rotonde_takken">${escapeHtml(t('roundabout_arms'))}</label>
+            <select id="rotonde_takken">
+              ${['3','4','5','6'].map(v => optionHtml(v, $("lang_toggle").value === 'en' ? `${v}-arm` : `${v}-taks`, v === (document.querySelector('#rotonde_takken')?.value || '4'))).join('')}
+            </select>
+          </div>`;
+      } else if (type === "t_splitsing") {
+        html = `
+          <div class="form-group">
+            <label for="t_missing">${escapeHtml(t('t_missing'))}</label>
+            <select id="t_missing">
+              ${[
+                {v:'N', nl:'Noord ontbreekt', en:'North missing'},
+                {v:'O', nl:'Oost ontbreekt', en:'East missing'},
+                {v:'Z', nl:'Zuid ontbreekt', en:'South missing'},
+                {v:'W', nl:'West ontbreekt', en:'West missing'}
+              ].map(o => optionHtml(o.v, $("lang_toggle").value === 'en' ? o.en : o.nl, o.v === (document.querySelector('#t_missing')?.value || 'N'))).join('')}
+            </select>
+          </div>`;
+      }
+      $("armen_ui").innerHTML = html;
+      document.querySelector('#rotonde_takken')?.addEventListener('change', () => { rerenderAll(); scheduleAutosave(); });
+      document.querySelector('#t_missing')?.addEventListener('change', () => { rerenderAll(); scheduleAutosave(); });
+    }
+
+    function renderJunctionPreview() {
+      $("junction_preview").innerHTML = `<div class="previewBox"><canvas id="junctionCanvas" width="500" height="140"></canvas></div>`;
+      drawJunctionCanvas();
+    }
+
+    function drawJunctionCanvas() {
+      const canvas = $("junctionCanvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 4;
+      ctx.lineCap = "butt";
+      ctx.font = "14px Arial";
+      ctx.fillStyle = "#111";
+
+      const type = $("kruispunt_type").value;
+      const cx = w / 2;
+      const cy = h / 2;
+      const sx = w * 0.38;
+      const sy = h * 0.38;
+
+      if (type === "kruispunt_4arm") {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - sy); ctx.lineTo(cx, cy + sy);
+        ctx.moveTo(cx - sx, cy); ctx.lineTo(cx + sx, cy);
+        ctx.stroke();
+        ctx.fillText("N", cx - 5, 18); ctx.fillText("Z", cx - 5, h - 8);
+        ctx.fillText("O", w - 20, cy + 5); ctx.fillText("W", 8, cy + 5);
+      } else if (type === "t_splitsing") {
+        const miss = document.querySelector('#t_missing')?.value || 'N';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + sy); ctx.lineTo(cx, cy - 10);
+        ctx.moveTo(cx - sx, cy - 10); ctx.lineTo(cx + sx, cy - 10);
+        ctx.stroke();
+        if (miss !== "N") ctx.fillText("N", cx - 5, 18);
+        if (miss !== "Z") ctx.fillText("Z", cx - 5, h - 8);
+        if (miss !== "O") ctx.fillText("O", w - 20, cy - 5);
+        if (miss !== "W") ctx.fillText("W", 8, cy - 5);
+      } else if (type === "rotonde") {
+        const k = parseInt(document.querySelector('#rotonde_takken')?.value || '4', 10);
+        const r = 28;
+        const armTo = Math.min(w, h) * 0.38;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+        const angs = Array.from({ length: k }, (_, idx) => 90 - idx * (360 / k));
+        for (const a of angs) {
+          const rad = a * Math.PI / 180;
+          const x1 = cx + r * Math.cos(rad);
+          const y1 = cy - r * Math.sin(rad);
+          const x2 = cx + armTo * Math.cos(rad);
+          const y2 = cy - armTo * Math.sin(rad);
+          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        }
+        ctx.fillText("N", cx - 5, 18); ctx.fillText("O", w - 20, cy + 5);
+        ctx.fillText("Z", cx - 5, h - 8); ctx.fillText("W", 8, cy + 5);
+        ctx.fillText(`${k}-taks`, cx - 18, cy + 5);
+      }
+    }
+
+    function currentParticipantValues(k) {
+      return {
+        rol: document.querySelector(`#veh${k}_rol`)?.value || roltypen[0],
+        intentie: document.querySelector(`#veh${k}_int`)?.value || intenties[0],
+        ben: document.querySelector(`#veh${k}_ben`)?.value || "N",
+        pos: document.querySelector(`#veh${k}_pos`)?.value || "00_onbekend_nvt",
+        rotStatus: document.querySelector(`#veh${k}_rot_status`)?.value || "naderend_invoegen",
+        uitrit: document.querySelector(`#veh${k}_uitrit`)?.value || "N"
+      };
+    }
+
+    function renderDeelnemersUI() {
+      const n = nActive();
+      const colsClass = `cols-${n <= 4 ? n : 5}`;
+      const existing = {};
+      for (let k = 1; k <= 5; k++) existing[k] = currentParticipantValues(k);
+
+      const dirChoices = $("kruispunt_type").value === "rotonde" ? rotondeDirs() : richtingen4;
+      const rotChoices = rotondeDirs();
+
+      let html = `<div class="participants-grid ${colsClass}">`;
+      for (let k = 1; k <= n; k++) {
+        const v = existing[k];
+        html += `
+          <div class="well">
+            <h5>${escapeHtml(t('participant')(k))}</h5>
+            <div class="form-group"><label for="veh${k}_rol">${escapeHtml(t('role'))}</label>
+              <select id="veh${k}_rol">${roltypen.map(x => optionHtml(x, tl(x, roltypen_en), x === v.rol)).join('')}</select></div>
+            <div class="form-group"><label for="veh${k}_int">${escapeHtml(t('intent'))}</label>
+              <select id="veh${k}_int">${intenties.map(x => optionHtml(x, tl(x, intenties_en), x === v.intentie)).join('')}</select></div>
+            <div class="form-group"><label for="veh${k}_ben">${escapeHtml(t('approach'))}</label>
+              <select id="veh${k}_ben">${dirChoices.map(x => optionHtml(x.value, directionLabel(x.label), x.value === v.ben)).join('')}</select></div>
+            <div class="form-group"><label for="veh${k}_pos">${escapeHtml(t('position'))}</label>
+              <select id="veh${k}_pos">${posities.map(([lab,val]) => optionHtml(val, positionLabel(lab, val), val === v.pos)).join('')}</select></div>
+            ${$("kruispunt_type").value === 'rotonde' ? `
+              <div class="form-group"><label for="veh${k}_rot_status">${escapeHtml(t('roundabout_status'))}</label>
+                <select id="veh${k}_rot_status">${[
+                  ['naderend_invoegen', {nl:'naderend_invoegen', en:'approaching to merge'}],
+                  ['op_rotonde', {nl:'op_rotonde', en:'on roundabout'}],
+                  ['afrijdend', {nl:'afrijdend', en:'leaving roundabout'}]
+                ].map(([x,lab]) => optionHtml(x, $("lang_toggle").value === 'en' ? lab.en : lab.nl, x === v.rotStatus)).join('')}</select></div>
+              <div class="form-group"><label for="veh${k}_uitrit">${escapeHtml(t('roundabout_exit'))}</label>
+                <select id="veh${k}_uitrit">${rotChoices.map(x => optionHtml(x.value, directionLabel(x.label), x.value === v.uitrit)).join('')}</select></div>
+            ` : ''}
+          </div>`;
+      }
+      html += `</div>`;
+      $("deelnemers_ui").innerHTML = html;
+
+      $("deelnemers_ui").querySelectorAll('select').forEach(el => el.addEventListener('change', () => {
+        rerenderMatrixAndSummary();
+        scheduleAutosave();
+      }));
+    }
+
+    function currentMatrixValues() {
+      const data = {};
+      pairsUpTo(5).forEach(({ i, j }) => {
+        const pid = pairId(i, j);
+        const ts = state.tomSelects[`causes_${pid}`];
+        data[pid] = {
+          win: document.querySelector(`input[name="win_${pid}"]:checked`)?.value || "",
+          causes: ts ? ts.getValue() : Array.from(document.querySelector(`#causes_${pid}`)?.selectedOptions || []).map(o => o.value),
+          primary: document.querySelector(`#primary_${pid}`)?.value || ""
+        };
+      });
+      return data;
+    }
+
+    function makeLabeledChoices(values) {
+      return values.map((v, idx) => ({ value: v, label: idx < 3 ? `★ ${v}` : v }));
+    }
+
+    function cellHtml(i, j, oldVals) {
+      const pid = pairId(i, j);
+      const rolI = document.querySelector(`#veh${i}_rol`)?.value || roltypen[0];
+      const rolJ = document.querySelector(`#veh${j}_rol`)?.value || roltypen[0];
+      const sugg = suggestOorzaken(ctxList(), rolI, rolJ);
+      const labeled = makeLabeledChoices(sugg);
+      const old = oldVals[pid] || { win: "", causes: [], primary: "" };
+      const selectedCauses = old.causes.filter(x => sugg.includes(x));
+      const primary = selectedCauses.includes(old.primary) ? old.primary : "";
+
+      return `
+        <div class="cellblock">
+          <div class="form-group inline-radio">
+            <label><input type="radio" name="win_${pid}" value="${i}" ${old.win === String(i) ? 'checked' : ''}> ${i}</label>
+            <label><input type="radio" name="win_${pid}" value="${j}" ${old.win === String(j) ? 'checked' : ''}> ${j}</label>
+          </div>
+          <div class="form-group">
+            <select id="causes_${pid}" multiple>
+              ${labeled.map(x => `<option value="${escapeHtml(x.value)}" ${selectedCauses.includes(x.value) ? 'selected' : ''}>${escapeHtml(x.label)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <select id="primary_${pid}">
+              <option value="">${escapeHtml(t('choose_primary'))}</option>
+              ${selectedCauses.map(x => optionHtml(x, x, x === primary)).join('')}
+            </select>
+          </div>
+        </div>`;
+    }
+
+    function destroyTomSelects() {
+      Object.values(state.tomSelects).forEach(ts => { try { ts.destroy(); } catch(e) {} });
+      state.tomSelects = {};
+    }
+
+    function initCauseSelects() {
+      document.querySelectorAll('select[id^="causes_"]').forEach(sel => {
+        const id = sel.id;
+        const ts = new TomSelect(sel, {
+          plugins: ['remove_button'],
+          create: false,
+          hideSelected: false,
+          maxOptions: null,
+          closeAfterSelect: false,
+          placeholder: t('choose_causes')
+        });
+        state.tomSelects[id] = ts;
+        ts.on('change', () => {
+          const pid = id.replace('causes_', '');
+          syncPrimaryFromCauses(pid);
+          renderSummaryTable();
+          renderDebugUI();
+          scheduleAutosave();
+        });
+      });
+    }
+
+    function syncPrimaryFromCauses(pid) {
+      const ts = state.tomSelects[`causes_${pid}`];
+      const primary = $(`primary_${pid}`);
+      if (!primary || !ts) return;
+      const vals = Array.isArray(ts.getValue()) ? ts.getValue() : (ts.getValue() ? [ts.getValue()] : []);
+      const cur = primary.value;
+      if (vals.length === 0) {
+        primary.innerHTML = `<option value="">${escapeHtml(t('choose_primary'))}</option>`;
+        return;
+      }
+      const chosen = vals.includes(cur) ? cur : vals[0];
+      primary.innerHTML = `<option value="">${escapeHtml(t('choose_primary'))}</option>` + vals.map(v => optionHtml(v, v, v === chosen)).join('');
+      primary.value = chosen;
+    }
+
+    function renderMatrixUI() {
+      const oldVals = currentMatrixValues();
+      destroyTomSelects();
+      const n = nActive();
+      const allowedSet = new Set(allowedPairs().map(x => pairId(x.i, x.j)));
+
+      let html = `<table class="matrix"><thead><tr><th></th>`;
+      for (let c = 1; c <= n; c++) html += `<th>${c}</th>`;
+      html += `</tr></thead><tbody>`;
+
+      for (let r = 1; r <= n; r++) {
+        html += `<tr><th>${r}</th>`;
+        for (let c = 1; c <= n; c++) {
+          if (c <= r) html += `<td class="na">—</td>`;
+          else {
+            const pid = pairId(r,c);
+            html += allowedSet.has(pid) ? `<td>${cellHtml(r,c,oldVals)}</td>` : `<td class="disabled">${escapeHtml(t('pair_na'))}</td>`;
+          }
+        }
+        html += `</tr>`;
+      }
+      html += `</tbody></table>`;
+      $("matrix_ui").innerHTML = html;
+
+      initCauseSelects();
+
+      $("matrix_ui").querySelectorAll('input[type="radio"]').forEach(el => el.addEventListener('change', () => {
+        renderSummaryTable();
+        renderDebugUI();
+        scheduleAutosave();
+      }));
+      $("matrix_ui").querySelectorAll('select[id^="primary_"]').forEach(el => el.addEventListener('change', () => {
+        scheduleAutosave();
+      }));
+    }
+
+    function summaryDf() {
+      const n = nActive();
+      const wins = Array(n).fill(0);
+      allowedPairs().forEach(({ i, j }) => {
+        const pid = pairId(i, j);
+        const w = document.querySelector(`input[name="win_${pid}"]:checked`)?.value;
+        if (w && [String(i), String(j)].includes(w)) wins[parseInt(w,10)-1] += 1;
+      });
+      const uniq = [...new Set([...wins].sort((a,b) => b-a))];
+      return wins.map((w, idx) => ({ veh_id: idx + 1, wins: w, rank: uniq.indexOf(w) + 1 }));
+    }
+
+    function renderSummaryTable() {
+      const rows = summaryDf();
+      const headers = t('summary_headers');
+      let html = `<table class="summary"><thead><tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>`;
+      rows.forEach(r => { html += `<tr><td>${r.veh_id}</td><td>${r.wins}</td><td>${r.rank}</td></tr>`; });
+      html += `</tbody></table>`;
+      $("summary_table").innerHTML = html;
+    }
+
+    function renderDebugUI() {
+      if (!$("debug_mode").checked) {
+        $("debug_ui").innerHTML = "";
+        return;
+      }
+      const n = nActive();
+      const ctx = ctxList();
+      const roles = Array.from({ length: n }, (_, idx) => document.querySelector(`#veh${idx+1}_rol`)?.value || roltypen[0]);
+      const sugg = suggestOorzaken(ctx, roles[0], roles[Math.min(1, n-1)]).slice(0,5);
+      const ctxOn = Object.entries(ctx).filter(([_,v]) => v).map(([k]) => k);
+      $("debug_ui").innerHTML = `
+        <div class="debugBox">
+          <b>DEBUG – context actief:</b> ${escapeHtml(ctxOn.length ? ctxOn.join(', ') : 'geen')}<br>
+          <b>DEBUG – n:</b> ${n}<br>
+          <b>Top 5 suggesties (paar 1–2):</b>
+          <ul>${sugg.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>
+        </div>`;
+    }
+
+    function refImageChanged() {
+      const file = $("ref_img").files?.[0];
+      if (!file) {
+        state.uploadedRefName = "";
+        state.uploadedRefDataUrl = "";
+        $("ref_img_view").style.display = "none";
+        scheduleAutosave();
+        return;
+      }
+      state.uploadedRefName = file.name;
+      const reader = new FileReader();
+      reader.onload = e => {
+        state.uploadedRefDataUrl = e.target.result;
+        $("ref_img_view").src = state.uploadedRefDataUrl;
+        $("ref_img_view").style.display = "block";
+        scheduleAutosave();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function collectDataForSave() {
+      const opgavecode = ($("opgavecode").value || '').trim();
+      if (!opgavecode) throw new Error(t('opgave_missing'));
+      const n = nActive();
+
+      for (let k = 1; k <= n; k++) {
+        if (!document.querySelector(`#veh${k}_rol`)?.value || !document.querySelector(`#veh${k}_int`)?.value || !document.querySelector(`#veh${k}_ben`)?.value || !document.querySelector(`#veh${k}_pos`)?.value) {
+          throw new Error(t('vehicle_missing')(k));
+        }
+        if ($("kruispunt_type").value === 'rotonde') {
+          if (!document.querySelector(`#veh${k}_rot_status`)?.value || !document.querySelector(`#veh${k}_uitrit`)?.value) {
+            throw new Error(t('rotonde_missing')(k));
+          }
+        }
+      }
+
+      const ap = allowedPairs();
+      for (const { i, j } of ap) {
+        const pid = pairId(i,j);
+        const w = document.querySelector(`input[name="win_${pid}"]:checked`)?.value || '';
+        const ts = state.tomSelects[`causes_${pid}`];
+        const causes = ts ? (Array.isArray(ts.getValue()) ? ts.getValue() : (ts.getValue() ? [ts.getValue()] : [])) : [];
+        const prim = document.querySelector(`#primary_${pid}`)?.value || '';
+        if (!w) throw new Error(t('winnaar_missing')(i,j));
+        if (causes.length === 0) throw new Error(t('causes_missing')(i,j));
+        if (!prim || !causes.includes(prim)) throw new Error(t('primary_missing')(i,j));
+      }
+
+      const now = new Date();
+      const nowStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+      const ctx = ctxList();
+      const opg = opgavecode;
+
+      const scenario_row = {
+        opgavecode: opg,
+        naam_codeur: ($("naam_codeur").value || '').trim(),
+        datumtijd: nowStr,
+        vraagstam: $("vraagstam").value || '',
+        opleiding_fase: $("opleiding_fase").value || '',
+        n_deelnemers_gekozen: parseInt($("n_deelnemers").value || String(n), 10),
+        n_deelnemers_actief: n,
+        kruispunt_type: $("kruispunt_type").value,
+        rotonde_takken: $("kruispunt_type").value === 'rotonde' ? parseInt(document.querySelector('#rotonde_takken')?.value || '', 10) : '',
+        t_missing: $("kruispunt_type").value === 't_splitsing' ? (document.querySelector('#t_missing')?.value || '') : '',
+        ctx_borden: ctx.borden,
+        ctx_verkeerslichten: ctx.verkeerslichten,
+        ctx_haaientanden: ctx.haaientanden,
+        ctx_stopstreep: ctx.stopstreep,
+        ctx_uitrit_erf: ctx.uitrit_erf,
+        ctx_onverhard: ctx.onverhard,
+        ctx_vop: ctx.vop,
+        ctx_tekens: ctx.tekens,
+        ref_img_name: state.uploadedRefName || ''
+      };
+
+      const deelnemers = [];
+      for (let k = 1; k <= n; k++) {
+        deelnemers.push({
+          opgavecode: opg,
+          veh_id: k,
+          roltype: document.querySelector(`#veh${k}_rol`).value,
+          intentie: document.querySelector(`#veh${k}_int`).value,
+          benadering_code: document.querySelector(`#veh${k}_ben`).value,
+          positie_code: document.querySelector(`#veh${k}_pos`).value,
+          rotonde_status: $("kruispunt_type").value === 'rotonde' ? document.querySelector(`#veh${k}_rot_status`).value : '',
+          uitrit_code: $("kruispunt_type").value === 'rotonde' ? document.querySelector(`#veh${k}_uitrit`).value : ''
+        });
+      }
+
+      const interacties = [];
+      const interactie_oorzaken = [];
+      for (const { i, j } of ap) {
+        const pid = pairId(i,j);
+        const ts = state.tomSelects[`causes_${pid}`];
+        const causes = ts ? (Array.isArray(ts.getValue()) ? ts.getValue() : (ts.getValue() ? [ts.getValue()] : [])) : [];
+        const prim = document.querySelector(`#primary_${pid}`).value;
+        interacties.push({
+          opgavecode: opg,
+          i, j,
+          winnaar: parseInt(document.querySelector(`input[name="win_${pid}"]:checked`).value, 10),
+          oorzaak_primair: prim,
+          oorzaken: causes.join('; ')
+        });
+        causes.forEach(oorzaak => interactie_oorzaken.push({
+          opgavecode: opg, i, j, oorzaak, is_primair: oorzaak === prim
+        }));
+      }
+
+      const samenv = summaryDf().map(r => ({ opgavecode: opg, ...r }));
+      return { nowStr, scenario_row, deelnemers, interacties, interactie_oorzaken, samenv };
+    }
+
+    function saveCurrentToWorkbook() {
+      const data = collectDataForSave();
+      state.workbookData.Scenarios.push(data.scenario_row);
+      state.workbookData.Deelnemers.push(...data.deelnemers);
+      state.workbookData.Interacties.push(...data.interacties);
+      state.workbookData.InteractieOorzaken.push(...data.interactie_oorzaken);
+      state.workbookData.Samenvatting.push(...data.samenv);
+      localStorage.setItem(state.workbookKey, JSON.stringify(state.workbookData));
+      updateItemCountPill();
+      setStatus(t('saved_ok')(data.nowStr), 'ok');
+      return true;
+    }
+
+    function normalizeImportedRows(rows) {
+      if (!Array.isArray(rows)) return [];
+      return rows.filter(row => row && Object.keys(row).length > 0);
+    }
+
+    function importWorkbookFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, { type: 'array' });
+            const requiredSheets = ['Scenarios', 'Deelnemers', 'Interacties', 'InteractieOorzaken', 'Samenvatting'];
+            for (const name of requiredSheets) {
+              if (!wb.Sheets[name]) {
+                reject(new Error(t('import_sheet_missing')(name)));
+                return;
+              }
+            }
+            state.workbookData = {
+              Scenarios: normalizeImportedRows(XLSX.utils.sheet_to_json(wb.Sheets['Scenarios'], { defval: '' })),
+              Deelnemers: normalizeImportedRows(XLSX.utils.sheet_to_json(wb.Sheets['Deelnemers'], { defval: '' })),
+              Interacties: normalizeImportedRows(XLSX.utils.sheet_to_json(wb.Sheets['Interacties'], { defval: '' })),
+              InteractieOorzaken: normalizeImportedRows(XLSX.utils.sheet_to_json(wb.Sheets['InteractieOorzaken'], { defval: '' })),
+              Samenvatting: normalizeImportedRows(XLSX.utils.sheet_to_json(wb.Sheets['Samenvatting'], { defval: '' }))
+            };
+            localStorage.setItem(state.workbookKey, JSON.stringify(state.workbookData));
+            updateItemCountPill();
+            setStatus(t('import_ok'), 'ok');
+            resolve(true);
+          } catch (err) {
+            reject(err);
+          }
+        };
+        reader.onerror = () => reject(new Error(t('import_error')));
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function downloadWorkbook() {
+      const hasData = Object.values(state.workbookData).some(arr => arr.length > 0);
+      if (!hasData) {
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet([{ bericht: t('empty_download') }]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Info');
+        XLSX.writeFile(wb, `results_${dateStamp()}.xlsx`);
+        setStatus(t('empty_download'), 'muted');
+        return;
+      }
+      const wb = XLSX.utils.book_new();
+      Object.entries(state.workbookData).forEach(([sheet, rows]) => {
+        const ws = XLSX.utils.json_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, sheet);
+      });
+      XLSX.writeFile(wb, `results_${dateStamp()}.xlsx`);
+      setStatus(t('downloaded_ok'), 'ok');
+    }
+
+    function dateStamp() {
+      const d = new Date();
+      return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function serializeFormState() {
+      const matrix = currentMatrixValues();
+      return {
+        lang: $("lang_toggle").value,
+        opgavecode: $("opgavecode").value,
+        naam_codeur: $("naam_codeur").value,
+        vraagstam: $("vraagstam").value,
+        opleiding_fase: $("opleiding_fase").value,
+        n_deelnemers: $("n_deelnemers").value,
+        kruispunt_type: $("kruispunt_type").value,
+        rotonde_takken: document.querySelector('#rotonde_takken')?.value || '4',
+        t_missing: document.querySelector('#t_missing')?.value || 'N',
+        ctx: Array.from(document.querySelectorAll('#ctx_container input[type="checkbox"]:checked')).map(el => el.value),
+        debug_mode: $("debug_mode").checked,
+        ref_img_name: state.uploadedRefName,
+        ref_img_data: state.uploadedRefDataUrl,
+        participants: Array.from({ length: 5 }, (_, idx) => currentParticipantValues(idx+1)),
+        matrix
+      };
+    }
+
+    let autosaveTimer = null;
+    function scheduleAutosave() {
+      clearTimeout(autosaveTimer);
+      autosaveTimer = setTimeout(() => {
+        localStorage.setItem(state.autosaveKey, JSON.stringify(serializeFormState()));
+        setAutosaveLabel('saved');
+        setTimeout(() => setAutosaveLabel('active'), 900);
+      }, 250);
+    }
+
+    function restoreAutosave() {
+      const raw = localStorage.getItem(state.autosaveKey);
+      const wbRaw = localStorage.getItem(state.workbookKey);
+      if (wbRaw) {
+        try { state.workbookData = JSON.parse(wbRaw); } catch(e) {}
+      }
+      updateItemCountPill();
+      if (!raw) return;
+      try {
+        const s = JSON.parse(raw);
+        if (s.lang) $("lang_toggle").value = s.lang;
+        $("opgavecode").value = s.opgavecode || '';
+        $("naam_codeur").value = s.naam_codeur || '';
+        $("vraagstam").value = s.vraagstam || '';
+        $("opleiding_fase").value = s.opleiding_fase || 'Fase 3';
+        $("n_deelnemers").value = s.n_deelnemers || '4';
+        $("kruispunt_type").value = s.kruispunt_type || 'kruispunt_4arm';
+        populateStaticControls();
+        applyLanguage();
+        renderArmenUI();
+        if (document.querySelector('#rotonde_takken')) document.querySelector('#rotonde_takken').value = s.rotonde_takken || '4';
+        if (document.querySelector('#t_missing')) document.querySelector('#t_missing').value = s.t_missing || 'N';
+        document.querySelectorAll('#ctx_container input[type="checkbox"]').forEach(cb => cb.checked = (s.ctx || []).includes(cb.value));
+        $("debug_mode").checked = !!s.debug_mode;
+        state.uploadedRefName = s.ref_img_name || '';
+        state.uploadedRefDataUrl = s.ref_img_data || '';
+        rerenderAll();
+        if (state.uploadedRefDataUrl) {
+          $("ref_img_view").src = state.uploadedRefDataUrl;
+          $("ref_img_view").style.display = 'block';
+        }
+        (s.participants || []).forEach((p, idx) => {
+          const k = idx + 1;
+          if (document.querySelector(`#veh${k}_rol`)) document.querySelector(`#veh${k}_rol`).value = p.rol || roltypen[0];
+          if (document.querySelector(`#veh${k}_int`)) document.querySelector(`#veh${k}_int`).value = p.intentie || intenties[0];
+          if (document.querySelector(`#veh${k}_ben`)) document.querySelector(`#veh${k}_ben`).value = p.ben || 'N';
+          if (document.querySelector(`#veh${k}_pos`)) document.querySelector(`#veh${k}_pos`).value = p.pos || '00_onbekend_nvt';
+          if (document.querySelector(`#veh${k}_rot_status`)) document.querySelector(`#veh${k}_rot_status`).value = p.rotStatus || 'naderend_invoegen';
+          if (document.querySelector(`#veh${k}_uitrit`)) document.querySelector(`#veh${k}_uitrit`).value = p.uitrit || 'N';
+        });
+        renderMatrixUI();
+        Object.entries(s.matrix || {}).forEach(([pid, obj]) => {
+          const radio = document.querySelector(`input[name="win_${pid}"][value="${obj.win}"]`);
+          if (radio) radio.checked = true;
+          const ts = state.tomSelects[`causes_${pid}`];
+          if (ts) ts.setValue(obj.causes || [], true);
+          syncPrimaryFromCauses(pid);
+          const primary = document.querySelector(`#primary_${pid}`);
+          if (primary && obj.primary && Array.from(primary.options).some(o => o.value === obj.primary)) primary.value = obj.primary;
+        });
+        renderSummaryTable();
+        renderDebugUI();
+        setAutosaveLabel('restored');
+        setStatus(t('restored_notice'), 'muted');
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    function rerenderMatrixAndSummary() {
+      renderMatrixUI();
+      renderSummaryTable();
+      renderDebugUI();
+    }
+
+    function resetAll(options = {}) {
+      const keepWorkbook = options.keepWorkbook !== false;
+      destroyTomSelects();
+      $("opgavecode").value = '';
+      $("naam_codeur").value = '';
+      $("vraagstam").value = '';
+      $("opleiding_fase").value = 'Fase 3';
+      $("n_deelnemers").value = '4';
+      $("kruispunt_type").value = 'kruispunt_4arm';
+      document.querySelectorAll('#ctx_container input[type="checkbox"]').forEach(cb => cb.checked = false);
+      $("debug_mode").checked = false;
+      $("ref_img").value = '';
+      state.uploadedRefName = '';
+      state.uploadedRefDataUrl = '';
+      $("ref_img_view").style.display = 'none';
+      localStorage.removeItem(state.autosaveKey);
+      if (!keepWorkbook) {
+        state.workbookData = {
+          Scenarios: [],
+          Deelnemers: [],
+          Interacties: [],
+          InteractieOorzaken: [],
+          Samenvatting: []
+        };
+        localStorage.removeItem(state.workbookKey);
+        updateItemCountPill();
+      }
+      setStatus('');
+      rerenderAll();
+    }
+
+    function openModal() { $("new_modal_backdrop").style.display = 'flex'; }
+    function closeModal() { $("new_modal_backdrop").style.display = 'none'; }
+
+    function rerenderAll() {
+      renderArmenUI();
+      renderJunctionPreview();
+      renderDeelnemersUI();
+      renderMatrixUI();
+      renderSummaryTable();
+      renderDebugUI();
+      updateItemCountPill();
+    }
+
+    function bindEvents() {
+      $("lang_toggle").addEventListener('change', () => {
+        applyLanguage();
+        scheduleAutosave();
+      });
+      $("kruispunt_type").addEventListener('change', () => { rerenderAll(); scheduleAutosave(); });
+      $("n_deelnemers").addEventListener('change', () => { rerenderAll(); scheduleAutosave(); });
+      $("opleiding_fase").addEventListener('change', scheduleAutosave);
+      $("opgavecode").addEventListener('input', scheduleAutosave);
+      $("naam_codeur").addEventListener('input', scheduleAutosave);
+      $("vraagstam").addEventListener('input', scheduleAutosave);
+      $("debug_mode").addEventListener('change', () => { renderDebugUI(); scheduleAutosave(); });
+      $("ref_img").addEventListener('change', refImageChanged);
+      document.addEventListener('change', e => {
+        if (e.target.closest('#ctx_container')) {
+          rerenderMatrixAndSummary();
+          scheduleAutosave();
+        }
+      });
+      $("save_btn").addEventListener('click', () => {
+        try {
+          saveCurrentToWorkbook();
+          scheduleAutosave();
+        } catch (err) {
+          setStatus(err.message || String(err), 'error');
+        }
+      });
+      $("save_next_btn").addEventListener('click', () => {
+        try {
+          saveCurrentToWorkbook();
+          resetAll({ keepWorkbook: true });
+        } catch (err) {
+          setStatus(err.message || String(err), 'error');
+        }
+      });
+      $("download_btn").addEventListener('click', downloadWorkbook);
+      $("import_xlsx").addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+          await importWorkbookFile(file);
+        } catch (err) {
+          setStatus(err.message || t('import_error'), 'error');
+        } finally {
+          $("import_xlsx").value = '';
+        }
+      });
+      $("reset_dataset_btn").addEventListener('click', () => {
+        if (confirm(t('confirm_reset_dataset'))) {
+          resetAll({ keepWorkbook: false });
+        }
+      });
+      $("new_item_btn").addEventListener('click', openModal);
+      $("modal_cancel").addEventListener('click', closeModal);
+      $("modal_no_save").addEventListener('click', () => { closeModal(); resetAll({ keepWorkbook: true }); });
+      $("modal_save_then").addEventListener('click', () => {
+        closeModal();
+        try {
+          const ok = saveCurrentToWorkbook();
+          if (ok) resetAll({ keepWorkbook: true });
+        } catch(err) {
+          setStatus(err.message || String(err), 'error');
+        }
+      });
+    }
+
+    function init() {
+      populateStaticControls();
+      bindEvents();
+      applyLanguage();
+      rerenderAll();
+      restoreAutosave();
+    }
+
+    init();
+  </script>
+</body>
+</html>
